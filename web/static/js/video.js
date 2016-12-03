@@ -16,6 +16,13 @@ let Video = {
     let postButton = document.getElementById("msg-submit")
     let vidChannel = socket.channel("videos:" + videoId)
 
+    msgContainer.addEventListener("click", e => {
+      e.preventDefault()
+      let seconds = e.target.getAttribute("data-seek") || e.target.parentNode.getAttribute("data-seek")
+      if (!seconds) { return }
+      Player.seekTo(seconds)
+    })
+
     postButton.addEventListener("click", e => {
       let payload = {body: msgInput.value, at: Player.getCurrentTime()}
       vidChannel.push("new_annotation", payload).receive("error", e => console.log(e))
@@ -24,8 +31,7 @@ let Video = {
 
     vidChannel.on("new_annotation", resp => this.renderAnnotation(msgContainer, resp))
 
-    vidChannel.join()
-              .receive("ok", resp => console.log("joined the video channel", resp))
+    vidChannel.join().receive("ok", ({annotations}) => this.scheduleMessages(msgContainer, annotations))
               .receive("error", reason => console.log("join failed", reason))
   },
 
@@ -46,6 +52,25 @@ let Video = {
 
     msgContainer.appendChild(template)
     msgContainer.scrollTop = msgContainer.scrollHeight
+  },
+
+  scheduleMessages(msgContainer, annotations) {
+    setTimeout(() => {
+      let ctime = Player.getCurrentTime()
+      let remaining = this.renderAtTime(annotations, ctime, msgContainer)
+      this.scheduleMessages(msgContainer, remaining)
+    }, 1000)
+  },
+
+  renderAtTime(annotations, seconds, msgContainer) {
+    return annotations.filter(ann => {
+      if (ann.at > seconds) {
+        return true
+      } else {
+        this.renderAnnotation(msgContainer, ann)
+        return false
+      }
+    })
   }
 }
 
