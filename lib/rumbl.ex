@@ -10,6 +10,7 @@ defmodule Rumbl do
     children = [
       supervisor(Rumbl.Repo, []),
       supervisor(Rumbl.Endpoint, []),
+      supervisor(Rumbl.InfoSys.Supervisor, [])
     ]
 
     opts = [strategy: :one_for_one, name: Rumbl.Supervisor]
