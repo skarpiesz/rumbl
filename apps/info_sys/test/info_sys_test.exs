@@ -1,5 +1,5 @@
 defmodule InfoSysTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   alias InfoSys.Result
 
   defmodule TestBackend do
